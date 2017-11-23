@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+<head>
+<link rel="stylesheet" href="{% static 'css/glyphicons.css'%}">
+
+</head>
+{% block content %}
+    <br>
+    <div class="container">
+        <div class="card text-center">
+          <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+              <li class="nav-item">
+                <a class="nav-link" id="gallery" href="{% url 'map:gallery' pk=pk %}">Gallery</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link audio" href="{% url 'map:audio' pk=pk %}">Audio</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link video" href="{% url 'map:video' pk=pk %}">Video</a>
+              </li>
+            </ul>
+          </div>
+          <div class="card-block colour">
+            {% block detail %}
+
+            {% endblock %}
+            <h4 class="card-title"></h4>
+            <p class="card-text"></p>
+            {# <a href="#" class="btn btn-primary"></a>#}
+          </div>
+          <br>
+      </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block link %}
+    <link rel="stylesheet" href="{% static 'css/maps.css' %}">
+
+{% endblock %}
+{% block script %}
+
+
+<script>
+
+var latlong={};
+var latlon = {{latlon}}
+var idList={{idList}}
+var members={{members}}
+var income = {{income}}
+var houselist=JSON.parse('{{ houselist|safe }}')
+
+j=0;
+for (i=0;i<idList.length;i++){
+if (i%2==0){
+  latlong[i]={"latitude":latlon[j]+(i*0.2),"longitude":latlon[j+1]+(i*0.5)}
+  j=j+3;}
+else{
+  latlong[i]={"latitude":latlon[j]+(i*0.1),"longitude":latlon[j+1]+(i*0.3)}
+  j=j+3;}
+}
+
+var mapData=[]
+for (i=0;i<idList.length;i++){
+  if(income[i]<100000){
+    mapData[i]={"code":i,"name":"House ID:"+idList[i].toString()+"\n"+"Family Size:"+members[i].toString(),"value":members[i],"color":"#eea638"}
+  }
+  if(income[i]>=100000 && income[i]<200000){
+    mapData[i]={"code":i,"name":"House ID:"+idList[i].toString()+"\n"+"Family Size:"+members[i].toString(),"value":members[i],"color":"#de4c4f"}
+  }
+  if(income[i]>=200000 && income[i]<300000){
+    mapData[i]={"code":i,"name":"House ID:"+idList[i].toString()+"\n"+"Family Size:"+members[i].toString(),"value":members[i],"color":"black"}
+  }
+  if(income[i]>=300000){
+    mapData[i]={"code":i,"name":"House ID:"+idList[i].toString()+"\n"+"Family Size:"+members[i].toString(),"value":members[i],"color":"blue"}
+  }
+}
+// get min and max values
+var minBulletSize = 3;
+var maxBulletSize = 70;
+var min = Infinity;
+var max = -Infinity;
+for ( var i = 0; i < mapData.length; i++ ) {
+  var value = mapData[ i ].value;
+  if ( value < min ) {
+    min = value;
+  }
+  if ( value > max ) {
+    max = value;
+  }
+}
+
+// it's better to use circle square to show difference between values, not a radius
+var maxSquare = maxBulletSize * maxBulletSize * 2 * Math.PI;
+var minSquare = minBulletSize * minBulletSize * 2 * Math.PI;
+
+// create circle for each country
+var image = [];
+for ( var i = 0; i < mapData.length; i++ ) {
+  var dataItem = mapData[ i ];
+  var value = dataItem.value;
+  // calculate size of a bubble
+  var square = ( value - min ) / ( max - min ) * ( maxSquare - minSquare ) + minSquare;
+  if ( square < minSquare ) {
+    square = minSquare;
+  }
+  var size = Math.sqrt( square / ( Math.PI * 2 ) );
+  var id = dataItem.code;
+
+  image.push( {
+    "type": "circle",
+"theme": "light",
+
+    "width": size,
+    "height": size,
+    "color": dataItem.color,
+    "longitude": latlong[ id ].longitude,
+    "latitude": latlong[ id ].latitude,
+    "title": dataItem.name,
+    "value": value
+  } );
+}
+
+// build map
+var map = AmCharts.makeChart( "chartdiv", {
+  "type": "map",
+  "projection": "eckert6",
+  "titles": [ {
+    "text": "Visualisation of location of houses marked by the markers of sizes proprtional to the corresponding family size.",
+    "size": 14
+  }, {
+    "text": "",
+    "size": 11
+  } ],
+  "areasSettings": {
+    //"unlistedAreasColor": "#000000",
+    //"unlistedAreasAlpha": 0.1
+  },
+  "dataProvider": {
+    "map": "worldLow",
+"zoomLevel":85.5,
+"zoomLongitude": 12.80,
+ "zoomLatitude": 32.72,
+//"latitude":17.727056,
+//"longitude":80.805960,
+    "images": image
+  },
+  "export": {
+    "enabled": true
+  }
+} );
+</script>
+
+<script>
+
+dataPoints= []
+var members = {{members}}
+var income = {{income}}
+var idList = {{idList}}
+for(i=0; i<members.length;i++){
+  dataPoints[i]= { x: members[i], y: income[i],z:idList[i] }
+}
+
+window.onload = function () {
+
+
+
+var chart = new CanvasJS.Chart("chartContainer", {
+	animationEnabled: true,
+
+	zoomEnabled: true,
+	title:{
+		text: "Family Size Vs Income Plot"
+	},
+	axisX: {
+		title:"Family Size",
+		minimum: 1,
+		maximum: 10
+	},
+	axisY:{
+		title: "Income (in Rupees)",
+    minimum: 70000,
+		maximum: 350000
+	},
+	data: [{
+		type: "scatter",
+		toolTipContent: "<b>Family Size: </b>{x}<br/><b>Income: </b>{y}<br><b>House ID: </b>{z}",
+    markerSize:15,
+    dataPoints:dataPoints
+
+	}]
+});
+chart.render();
+
+}
+</script>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+
+
+{% endblock %}
+<br>
+{% block content %}
+<div id="chartdiv"></div>
+<br>
+<p><b>Radius</b>&nbsp-&nbspindicates the family size of house</p>
+<div id="table">
+<table>
+<tr>
+ <th><b>Income of the House&nbsp-&nbsp</b></th>
+ <th><div id="circle1"></div></th>
+ <th>less than 100000</th>
+ <th>&nbsp</th>
+ <th>&nbsp</th>
+ <th><div id="circle2"></div></th>
+ <th>between 100000 and 200000</th>
+ <th>&nbsp</th>
+ <th>&nbsp</th>
+ <th><div id="circle3"></div></th>
+ <th>between 200000 and 300000</th>
+ <th>&nbsp</th>
+ <th>&nbsp</th>
+ <th><div id="circle4"></div></th>
+ <th>greater than 300000</th>
+ </tr>
+ </table>
+</div>
+<br>
+<br>
+
+<div id="chartContainer" style="height: 500px; width: 100%;"></div>
+{% endblock %}
